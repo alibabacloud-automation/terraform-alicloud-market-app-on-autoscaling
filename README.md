@@ -24,7 +24,6 @@ module "market_app_on_autoscaling" {
   product_keyword = "jenkins"
 
   // instance cluster
-  ecs_instance_name     = "jenkins-instance"
   ecs_instance_password = "YourPassword123"
   instance_types        = "ecs.sn1ne.large"
   system_disk_category  = "cloud_efficiency"
@@ -59,9 +58,56 @@ module "market_app_on_autoscaling" {
 }
 ```
 
+Building the web application (e.g.,java) using market place image and create Autoscaling group and Autoscaling configuration.
+
+```hcl
+module "java_ess" {
+  source                     = "terraform-alicloud-modules/market-app-on-autoscaling/alicloud"
+  region                     = "cn-beijing"
+  profile                    = "Your-Profile-Name"
+
+  // product
+  product_keyword = "java"
+
+  // instance cluster
+  ecs_instance_password = "YourPassword123"
+  instance_types        = "ecs.sn1ne.large"
+  system_disk_category  = "cloud_efficiency"
+  security_group_ids    = ["sg-2ze0zgaj3hne6aid****"]
+  vswitch_ids           = ["vsw-2ze79rz1livcjkfb*****"]
+  frontend_port         = 8081
+
+  // Scaling configuration
+  create_autoscaling         = true
+  scaling_configuration_name = "testAccEssScalingConfiguration"
+  force_delete               = true
+
+  // Scaling lifecycle hook
+  lifecycle_hook_name = "lifehook"
+  mns_queue_name      = "sdfwede12****"
+
+  // bind slb
+  create_slb    = true
+  slb_name      = "for-java"
+  bandwidth     = 5
+  slb_spec      = "slb.s1.small"
+  instance_port = 8080
+  weight        = 50
+
+  // bind dns
+  bind_domain = true
+  domain_name = "dns001.abc"
+  dns_record = {
+    host_record = "java"
+    type        = "A"
+  }
+}
+```
+
 ## Examples
 
 * [complete](https://github.com/terraform-alicloud-modules/terraform-alicloud-market-app-on-autoscaling/tree/master/examples/complete)
+* [java-autoscaling-group](https://github.com/terraform-alicloud-modules/terraform-alicloud-market-app-on-autoscaling/tree/master/examples/java-autoscaling-group)
 
 ## Notes
 * This module using AccessKey and SecretKey are from `profile` and `shared_credentials_file`.
