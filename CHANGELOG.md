@@ -1,4 +1,5 @@
-## 1.0.0 (Unreleased)
+## 1.1.0 (Unreleased)
+## 1.0.0 (March 1, 2020)
 
 IMPROVEMENTS:
 
