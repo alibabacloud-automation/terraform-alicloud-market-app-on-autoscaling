@@ -20,14 +20,6 @@ module "market_app_on_autoscaling" {
   // product
   product_keyword = "jenkins"
 
-  // instance cluster
-  ecs_instance_password = "YourPassword123"
-  instance_types        = "ecs.sn1ne.large"
-  system_disk_category  = "cloud_efficiency"
-  security_group_ids    = ["sg-2ze0zgaj3hne6aid****"]
-  vswitch_ids           = ["vsw-2ze79rz1livcjkfb*****"]
-  frontend_port         = 8081
-
   // Autoscaling Group
   scaling_group_name = "testAccEssScalingGroup"
   min_size           = 3
@@ -36,7 +28,12 @@ module "market_app_on_autoscaling" {
   // Scaling configuration
   create_autoscaling         = true
   scaling_configuration_name = "testAccEssScalingConfiguration"
-  force_delete               = true
+  ecs_instance_password      = "YourPassword123"
+  instance_types             = "ecs.sn1ne.large"
+  system_disk_category       = "cloud_efficiency"
+  security_group_ids         = ["sg-2ze0zgaj3hne6aid****"]
+  vswitch_ids                = ["vsw-2ze79rz1livcjkfb*****"]
+  frontend_port              = 8081
 
   // Scaling lifecycle hook
   lifecycle_hook_name = "lifehook"
@@ -54,7 +51,7 @@ module "market_app_on_autoscaling" {
   bind_domain = true
   domain_name = "dns001.abc"
   dns_record = {
-    host_record = "wordpress"
+    host_record = "jenkins"
     type        = "A"
   }
 }
@@ -71,18 +68,20 @@ module "java_ess" {
   // product
   product_keyword = "java"
 
-  // instance cluster
-  ecs_instance_password = "YourPassword123"
-  instance_types        = "ecs.sn1ne.large"
-  system_disk_category  = "cloud_efficiency"
-  security_group_ids    = ["sg-2ze0zgaj3hne6aid****"]
-  vswitch_ids           = ["vsw-2ze79rz1livcjkfb*****"]
-  frontend_port         = 8081
+  // Autoscaling Group
+  scaling_group_name = "testAccEssScalingGroup"
+  min_size           = 2
+  max_size           = 4
 
   // Scaling configuration
   create_autoscaling         = true
   scaling_configuration_name = "testAccEssScalingConfiguration"
-  force_delete               = true
+  ecs_instance_password      = "YourPassword123"
+  instance_types             = "ecs.sn1ne.large"
+  system_disk_category       = "cloud_efficiency"
+  security_group_ids         = ["sg-2ze0zgaj3hne6aid****"]
+  vswitch_ids                = ["vsw-2ze79rz1livcjkfb*****"]
+  frontend_port              = 8081
 
   // Scaling lifecycle hook
   lifecycle_hook_name = "lifehook"

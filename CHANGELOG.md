@@ -1,7 +1,9 @@
 ## 1.1.0 (Unreleased)
 ## 1.0.0 (March 1, 2020)
 
-IMPROVEMENTS:
+IMPROVEMENTS
+
+- improve the readme [GH-3]( https://github.com/terraform-alicloud-modules/terraform-alicloud-market-app-on-autoscaling/pull/3)
 
 - add example of java autoscaling group [GH-2]( https://github.com/terraform-alicloud-modules/terraform-alicloud-market-app-on-autoscaling/pull/2)
 

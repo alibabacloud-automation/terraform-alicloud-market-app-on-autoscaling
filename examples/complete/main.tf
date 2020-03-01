@@ -52,14 +52,6 @@ module "market_app_on_autoscaling" {
   // product
   product_keyword = "jenkins"
 
-  // instance cluster
-  ecs_instance_password = "YourPassword123"
-  instance_types        = [data.alicloud_instance_types.this.ids.0]
-  system_disk_category  = "cloud_efficiency"
-  security_group_ids    = [module.security_group.this_security_group_id]
-  vswitch_ids           = [data.alicloud_vpcs.default.vpcs.0.vswitch_ids.0]
-  frontend_port         = 8081
-
   // Autoscaling Group
   scaling_group_name = "testAccEssScalingGroup"
   min_size           = 2
@@ -68,7 +60,12 @@ module "market_app_on_autoscaling" {
   // Scaling configuration
   create_autoscaling         = true
   scaling_configuration_name = "testAccEssScalingConfiguration"
-  force_delete               = true
+  ecs_instance_password      = "YourPassword123"
+  instance_types             = [data.alicloud_instance_types.this.ids.0]
+  system_disk_category       = "cloud_efficiency"
+  security_group_ids         = [module.security_group.this_security_group_id]
+  vswitch_ids                = [data.alicloud_vpcs.default.vpcs.0.vswitch_ids.0]
+  frontend_port              = 8081
 
   // lifecycle hook
   lifecycle_hook_name = "lifehook"

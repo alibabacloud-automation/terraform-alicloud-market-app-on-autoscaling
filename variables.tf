@@ -242,11 +242,6 @@ variable "role_name" {
   type        = string
   default     = ""
 }
-variable "force_delete" {
-  description = "The last scaling configuration will be deleted forcibly with deleting its scaling group."
-  type        = bool
-  default     = true
-}
 variable "password_inherit" {
   description = "Specifies whether to use the password that is predefined in the image. If true, the 'password' and 'kms_encrypted_password' will be ignored. You must ensure that the selected image has a password configured."
   type        = bool

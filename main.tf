@@ -72,7 +72,7 @@ module "market-autoscaling" {
   user_data                    = var.user_data
   key_name                     = var.key_name
   role_name                    = var.role_name
-  force_delete                 = var.force_delete
+  force_delete                 = true
   password_inherit             = var.password_inherit
   password                     = var.ecs_instance_password
   kms_encrypted_password       = var.kms_encrypted_password
