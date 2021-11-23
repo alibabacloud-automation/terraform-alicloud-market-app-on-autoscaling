@@ -6,10 +6,6 @@ English | [简体中文](https://github.com/terraform-alicloud-modules/terraform
 
 Terraform Module will be based on the ECS mirror provided by the Alicloud market to implement the autoscaling application environment.
 
-## Terraform versions
-
-The Module requires Terraform 0.12 and Terraform Provider AliCloud 1.71.0+.
-
 ## Usage
 
 Building the web application (e.g.,jenkins) using market place image and create Autoscaling group and Autoscaling configuration.
@@ -17,8 +13,6 @@ Building the web application (e.g.,jenkins) using market place image and create 
 ```hcl
 module "market_app_on_autoscaling" {
   source                     = "terraform-alicloud-modules/market-app-on-autoscaling/alicloud"
-  region                     = "cn-beijing"
-  profile                    = "Your-Profile-Name"
 
   // product
   product_keyword = "jenkins"
@@ -65,8 +59,6 @@ Building the web application (e.g.,java) using market place image and create Aut
 ```hcl
 module "java_ess" {
   source                     = "terraform-alicloud-modules/market-app-on-autoscaling/alicloud"
-  region                     = "cn-beijing"
-  profile                    = "Your-Profile-Name"
 
   // product
   product_keyword = "java"
@@ -114,8 +106,73 @@ module "java_ess" {
 * [java-autoscaling-group](https://github.com/terraform-alicloud-modules/terraform-alicloud-market-app-on-autoscaling/tree/master/examples/java-autoscaling-group)
 
 ## Notes
-* This module using AccessKey and SecretKey are from `profile` and `shared_credentials_file`.
-If you have not set them yet, please install [aliyun-cli](https://github.com/aliyun/aliyun-cli#installation) and configure it.
+From the version v1.1.0, the module has removed the following `provider` setting:
+
+```hcl
+provider "alicloud" {
+  profile                 = var.profile != "" ? var.profile : null
+  shared_credentials_file = var.shared_credentials_file != "" ? var.shared_credentials_file : null
+  region                  = var.region != "" ? var.region : null
+  skip_region_validation  = var.skip_region_validation
+  configuration_source    = "terraform-alicloud-modules/market-app-on-autoscaling"
+}
+```
+
+If you still want to use the `provider` setting to apply this module, you can specify a supported version, like 1.0.0:
+
+```hcl
+module "market_app_on_autoscaling" {
+  source          = "terraform-alicloud-modules/market-app-on-autoscaling/alicloud"
+  version         = "1.0.0"
+  region          = "cn-beijing"
+  profile         = "Your-Profile-Name"
+  product_keyword = "jenkins"
+  // ...
+}
+```
+
+If you want to upgrade the module to 1.1.0 or higher in-place, you can define a provider which same region with
+previous region:
+
+```hcl
+provider "alicloud" {
+  region  = "cn-beijing"
+  profile = "Your-Profile-Name"
+}
+module "market_app_on_autoscaling" {
+  source          = "terraform-alicloud-modules/market-app-on-autoscaling/alicloud"
+  product_keyword = "jenkins"
+  // ...
+}
+```
+or specify an alias provider with a defined region to the module using `providers`:
+
+```hcl
+provider "alicloud" {
+  region  = "cn-beijing"
+  profile = "Your-Profile-Name"
+  alias   = "bj"
+}
+module "market_app_on_autoscaling" {
+  source          = "terraform-alicloud-modules/market-app-on-autoscaling/alicloud"
+  providers    = {
+    alicloud = alicloud.bj
+  }
+  product_keyword = "jenkins"
+  // ...
+}
+```
+
+and then run `terraform init` and `terraform apply` to make the defined provider effect to the existing module state.
+
+More details see [How to use provider in the module](https://www.terraform.io/docs/language/modules/develop/providers.html#passing-providers-explicitly)
+
+## Terraform versions
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.12.0 |
+| <a name="requirement_alicloud"></a> [alicloud](#requirement\_alicloud) | >= 1.71.0 |
 
 Submit Issues
 -------------
@@ -125,7 +182,7 @@ If you have any problems when using this module, please opening a [provider issu
 
 Authors
 -------
-Created and maintained by Zhou qilin(z17810666992@163.com), He Guimin(@xiaozhu36, heguimin36@163.com).
+Created and maintained by Alibaba Cloud Terraform Team(terraform@alibabacloud.com)
 
 License
 ----
