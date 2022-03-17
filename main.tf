@@ -21,23 +21,20 @@ data "alicloud_market_product" "product" {
 # market-autoscaling
 ############################################
 module "market-autoscaling" {
-  source                  = "terraform-alicloud-modules/autoscaling/alicloud"
-  profile                 = var.profile != "" ? var.profile : null
-  shared_credentials_file = var.shared_credentials_file != "" ? var.shared_credentials_file : null
-  region                  = var.region != "" ? var.region : null
-  skip_region_validation  = var.skip_region_validation
+  source = "terraform-alicloud-modules/autoscaling/alicloud"
 
-  // Autoscaling Group
-  scaling_group_id   = var.scaling_group_id
-  scaling_group_name = var.scaling_group_name
-  max_size           = var.max_size
-  min_size           = var.min_size
-  default_cooldown   = var.default_cooldown
-  vswitch_ids        = var.vswitch_ids
-  removal_policies   = var.removal_policies
-  db_instance_ids    = var.db_instance_ids
+  # Autoscaling Group
+  create_scaling_group = var.create_autoscaling
+  scaling_group_id     = var.scaling_group_id
+  scaling_group_name   = var.scaling_group_name
+  min_size             = var.min_size
+  max_size             = var.max_size
+  default_cooldown     = var.default_cooldown
+  vswitch_ids          = var.vswitch_ids
+  removal_policies     = var.removal_policies
+  db_instance_ids      = var.db_instance_ids
 
-  // slb
+  # slb
   loadbalancer_ids = alicloud_slb.this.*.id
 
   multi_az_policy                          = var.multi_az_policy
@@ -46,7 +43,7 @@ module "market-autoscaling" {
   spot_instance_pools                      = var.spot_instance_pools
   spot_instance_remedy                     = var.spot_instance_remedy
 
-  // scaling configuration
+  # scaling configuration
   create_scaling_configuration = var.create_autoscaling
   image_id                     = var.image_id != "" ? var.image_id : data.alicloud_market_product.product.product.0.skus.0.images.0.image_id
   instance_types               = var.instance_types
@@ -59,19 +56,19 @@ module "market-autoscaling" {
   internet_max_bandwidth_out   = var.internet_max_bandwidth_out
   system_disk_category         = var.system_disk_category
   system_disk_size             = var.system_disk_size
-  enable                       = true
-  active                       = true
+  enable                       = var.enable
+  active                       = var.active
   user_data                    = var.user_data
   key_name                     = var.key_name
   role_name                    = var.role_name
-  force_delete                 = true
+  force_delete                 = var.force_delete
   password_inherit             = var.password_inherit
   password                     = var.ecs_instance_password
   kms_encrypted_password       = var.kms_encrypted_password
   kms_encryption_context       = var.kms_encryption_context
   data_disks                   = var.data_disks
 
-  // ess_lifecycle_hook
+  # ess_lifecycle_hook
   create_lifecycle_hook = var.create_autoscaling
   lifecycle_hook_name   = var.lifecycle_hook_name
   lifecycle_transition  = var.lifecycle_transition
@@ -80,12 +77,14 @@ module "market-autoscaling" {
   mns_topic_name        = var.mns_topic_name
   mns_queue_name        = var.mns_queue_name
   notification_metadata = var.notification_metadata
+
 }
+
 ############################################
 # Create SLB
 ############################################
 locals {
-  create_slb       = var.min_size > 0 ? var.create_slb : false
+  create_slb       = var.create_slb
   create_slb_group = var.use_existing_slb || var.create_slb ? true : false
   this_slb_id      = var.use_existing_slb ? var.existing_slb_id : var.create_slb ? concat(alicloud_slb.this.*.id, [""])[0] : ""
 }
@@ -93,14 +92,15 @@ locals {
 resource "alicloud_slb" "this" {
   count = local.create_slb ? 1 : 0
 
-  name                 = var.slb_name
-  internet_charge_type = var.internet_charge_type
-  address_type         = "internet"
-  specification        = var.slb_spec == "" ? null : var.slb_spec
+  load_balancer_name   = var.slb_name
+  internet_charge_type = var.slb_internet_charge_type != "" ? var.slb_internet_charge_type : var.internet_charge_type
+  address_type         = var.address_type
+  vswitch_id           = var.vswitch_id
+  load_balancer_spec   = var.slb_spec
   bandwidth            = var.bandwidth
+  master_zone_id       = var.master_zone_id
+  slave_zone_id        = var.slave_zone_id
   tags                 = var.slb_tags
-  master_zone_id       = var.master_zone_id == "" ? null : var.master_zone_id
-  slave_zone_id        = var.slave_zone_id == "" ? null : var.slave_zone_id
 }
 
 resource "alicloud_slb_server_group" "this" {
@@ -120,6 +120,7 @@ resource "alicloud_slb_listener" "this" {
 }
 
 resource "alicloud_ess_scalinggroup_vserver_groups" "this" {
+  count            = local.create_slb ? 1 : 0
   scaling_group_id = module.market-autoscaling.this_autoscaling_group_id
   vserver_groups {
     loadbalancer_id = concat(alicloud_slb.this.*.id, [""])[0]
@@ -140,8 +141,8 @@ data "alicloud_slbs" "this" {
 
 locals {
   allocate_public_ip = var.min_size > 0 ? false : local.create_slb == true ? false : var.allocate_public_ip
-  create_dns         = var.create_slb || var.use_existing_slb || var.min_size > 0 ? var.bind_domain : local.allocate_public_ip ? var.bind_domain : false
-  value              = var.create_slb || var.use_existing_slb ? var.existing_slb_id != "" ? data.alicloud_slbs.this.address : concat(alicloud_slb.this.*.address, [""])[0] : null
+  create_dns         = var.bind_domain
+  value              = var.create_slb ? concat(alicloud_slb.this.*.address, [""])[0] : var.existing_slb_id != "" ? data.alicloud_slbs.this.slbs.0.address : null
   records = [
     {
       value    = local.value
@@ -156,13 +157,10 @@ locals {
 }
 
 module "dns" {
-  source                  = "terraform-alicloud-modules/dns/alicloud"
-  region                  = var.region
-  profile                 = var.profile
-  shared_credentials_file = var.shared_credentials_file
-  skip_region_validation  = var.skip_region_validation
+  source = "terraform-alicloud-modules/dns/alicloud"
 
   create      = local.create_dns
   domain_name = var.domain_name
   records     = local.records
+
 }
